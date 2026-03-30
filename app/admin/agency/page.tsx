@@ -50,18 +50,126 @@ const PHASE_COLORS: Record<Phase, string> = {
 };
 
 const INITIAL_AGENTS: Omit<Agent, 'id'>[] = [
-  { name: 'SEO Orchestrator', emoji: '🧠', role: 'Orquestrador (SEO) - O Chefe. Define a pauta, estratégia de SEO e delega tarefas', phase: 'Orquestração', systemPrompt: 'Você é o Editor-Chefe e Especialista em SEO. Sua missão é orquestrar todo o processo de criação de conteúdo, definindo a pauta, a estratégia de palavras-chave, o ângulo da matéria e delegando as diretrizes para os demais agentes.', status: 'idle', lastRunAt: null, order: 0 },
-  { name: 'Search Query Analyst', emoji: '🕵️', role: 'Analista de Termos de Busca - Descobre ângulos e termos de cauda longa', phase: 'Pesquisa', systemPrompt: 'Você é um especialista em SEO e pesquisa de palavras-chave...', status: 'idle', lastRunAt: null, order: 1 },
-  { name: 'Analytics Reporter', emoji: '📰', role: 'Repórter Analítico - Analisa estatísticas e gera insights táticos', phase: 'Pesquisa', systemPrompt: 'Você é um repórter esportivo focado em dados...', status: 'idle', lastRunAt: null, order: 2 },
-  { name: 'Community Ninja', emoji: '🗣️', role: 'Monitor de Comunidade - Monitora reações da torcida e polêmicas', phase: 'Pesquisa', systemPrompt: 'Você é um especialista em redes sociais e sentimento da torcida...', status: 'idle', lastRunAt: null, order: 3 },
-  { name: 'Content Strategist', emoji: '✍️', role: 'Estrategista de Conteúdo - Define tom de voz e esqueleto do artigo', phase: 'Redação', systemPrompt: 'Você é um editor-chefe que define a estrutura de artigos virais...', status: 'idle', lastRunAt: null, order: 4 },
-  { name: 'Storytelling Expert', emoji: '📖', role: 'Especialista em Narrativa - Escreve o rascunho passional e autoral', phase: 'Redação', systemPrompt: 'Você é um escritor apaixonado por futebol que cria narrativas envolventes...', status: 'idle', lastRunAt: null, order: 5 },
-  { name: 'SEO Content Writer', emoji: '🌐', role: 'Redator SEO - Otimiza para motores de busca com H2/H3 e keywords', phase: 'Redação', systemPrompt: 'Você é um redator focado em rankear no Google...', status: 'idle', lastRunAt: null, order: 6 },
-  { name: 'Image Prompt Engineer', emoji: '📷', role: 'Engenheiro de Prompts de Imagem - Cria prompts para DALL-E/Midjourney', phase: 'Visual', systemPrompt: 'Você é um especialista em criar prompts detalhados para IA geradora de imagens...', status: 'idle', lastRunAt: null, order: 7 },
-  { name: 'Fact Checker', emoji: '🔍', role: 'Checador de Fatos - Cruza dados do texto com informações reais', phase: 'Revisão', systemPrompt: 'Você é um jornalista investigativo rigoroso com fatos...', status: 'idle', lastRunAt: null, order: 8 },
-  { name: 'Copy Editor', emoji: '👁️', role: 'Revisor de Texto - Corrige gramática e garante tom de voz', phase: 'Revisão', systemPrompt: 'Você é um revisor gramatical impecável...', status: 'idle', lastRunAt: null, order: 9 },
-  { name: 'CMS Publisher', emoji: '💻', role: 'Publicador - Formata e publica o artigo no blog', phase: 'Publicação', systemPrompt: 'Você é um especialista em formatação HTML e Markdown para CMS...', status: 'idle', lastRunAt: null, order: 10 },
-  { name: 'Social Media Coordinator', emoji: '📱', role: 'Coordenador Social - Cria posts para Twitter/TikTok/Kwai', phase: 'Distribuição', systemPrompt: 'Você é um social media manager focado em engajamento...', status: 'idle', lastRunAt: null, order: 11 },
+  {
+    name: 'SEO Orchestrator',
+    emoji: '🧠',
+    role: 'Orquestrador (SEO) - O Chefe. Define a pauta, estratégia de SEO e delega tarefas',
+    phase: 'Orquestração',
+    systemPrompt: 'Você é o Editor-Chefe e Especialista em SEO. Sua missão é orquestrar todo o processo de criação de conteúdo. Com base no tema fornecido, defina: 1) O título SEO ideal, 2) As 3 palavras-chave principais, 3) O ângulo da matéria (ex: crítico, informativo, passional) e 4) Uma estrutura sugerida de tópicos. Delegue essas diretrizes para o time.',
+    status: 'idle',
+    lastRunAt: null,
+    order: 0
+  },
+  {
+    name: 'Search Query Analyst',
+    emoji: '🕵️',
+    role: 'Analista de Termos de Busca - Descobre ângulos e termos de cauda longa',
+    phase: 'Pesquisa',
+    systemPrompt: 'Você é um especialista em SEO. Com base no tema e nas palavras-chave do Orquestrador, pesquise e identifique 5 termos de "cauda longa" (long-tail keywords) e 3 perguntas comuns que os usuários fazem no Google sobre este assunto. Explique por que esses termos são importantes para o ranking.',
+    status: 'idle',
+    lastRunAt: null,
+    order: 1
+  },
+  {
+    name: 'Analytics Reporter',
+    emoji: '📰',
+    role: 'Repórter Analítico - Analisa estatísticas e gera insights táticos',
+    phase: 'Pesquisa',
+    systemPrompt: 'Você é um repórter esportivo focado em dados. Analise o contexto da pauta e forneça 3 fatos estatísticos ou dados históricos relevantes que sustentem o argumento da matéria. Foque em métricas de desempenho, histórico de confrontos ou recordes.',
+    status: 'idle',
+    lastRunAt: null,
+    order: 2
+  },
+  {
+    name: 'Community Ninja',
+    emoji: '🗣️',
+    role: 'Monitor de Comunidade - Monitora reações da torcida e polêmicas',
+    phase: 'Pesquisa',
+    systemPrompt: 'Você é o termômetro das redes sociais. Identifique qual é o sentimento predominante da torcida em relação ao tema da pauta. Cite 2 possíveis reações ou "memes" que poderiam ser mencionados para gerar engajamento e proximidade com o leitor.',
+    status: 'idle',
+    lastRunAt: null,
+    order: 3
+  },
+  {
+    name: 'Content Strategist',
+    emoji: '✍️',
+    role: 'Estrategista de Conteúdo - Define tom de voz e esqueleto do artigo',
+    phase: 'Redação',
+    systemPrompt: 'Você é o arquiteto do texto. Reúna todas as pesquisas anteriores e crie o "esqueleto" detalhado do artigo. Defina os subtítulos (H2 e H3) e descreva brevemente o que deve ser escrito em cada parágrafo para garantir fluidez e retenção do leitor.',
+    status: 'idle',
+    lastRunAt: null,
+    order: 4
+  },
+  {
+    name: 'Storytelling Expert',
+    emoji: '📖',
+    role: 'Especialista em Narrativa - Escreve o rascunho passional e autoral',
+    phase: 'Redação',
+    systemPrompt: 'Você é um escritor passional de futebol. Transforme o esqueleto técnico em um texto vibrante, emocionante e autoral. Use metáforas esportivas, varie o tamanho das frases e crie uma introdução que prenda o leitor nos primeiros 5 segundos.',
+    status: 'idle',
+    lastRunAt: null,
+    order: 5
+  },
+  {
+    name: 'SEO Content Writer',
+    emoji: '🌐',
+    role: 'Redator SEO - Otimiza para motores de busca com H2/H3 e keywords',
+    phase: 'Redação',
+    systemPrompt: 'Você é o mestre da otimização. Pegue o rascunho emocional e ajuste-o para o Google: insira as palavras-chave naturalmente, garanta que os H2/H3 contenham termos de busca, otimize a legibilidade e crie uma Meta Description irresistível de até 155 caracteres.',
+    status: 'idle',
+    lastRunAt: null,
+    order: 6
+  },
+  {
+    name: 'Image Prompt Engineer',
+    emoji: '📷',
+    role: 'Engenheiro de Prompts de Imagem - Cria prompts para DALL-E/Midjourney',
+    phase: 'Visual',
+    systemPrompt: 'Você é um designer visual. Com base no conteúdo do artigo, crie 3 prompts detalhados para geração de imagens por IA. Os prompts devem descrever o estilo (ex: fotorealismo), a iluminação e os elementos principais para ilustrar a matéria de forma épica.',
+    status: 'idle',
+    lastRunAt: null,
+    order: 7
+  },
+  {
+    name: 'Fact Checker',
+    emoji: '🔍',
+    role: 'Checador de Fatos - Cruza dados do texto com informações reais',
+    phase: 'Revisão',
+    systemPrompt: 'Você é o guardião da verdade. Revise o texto final em busca de possíveis erros de datas, nomes de jogadores ou estatísticas conflitantes. Liste qualquer ponto que pareça duvidoso ou que precise de uma fonte adicional.',
+    status: 'idle',
+    lastRunAt: null,
+    order: 8
+  },
+  {
+    name: 'Copy Editor',
+    emoji: '👁️',
+    role: 'Revisor de Texto - Corrige gramática e garante tom de voz',
+    phase: 'Revisão',
+    systemPrompt: 'Você é o revisor gramatical. Sua tarefa é eliminar erros de português, ajustar a pontuação e garantir que o tom de voz escolhido na estratégia foi mantido do início ao fim.',
+    status: 'idle',
+    lastRunAt: null,
+    order: 9
+  },
+  {
+    name: 'CMS Publisher',
+    emoji: '💻',
+    role: 'Publicador - Formata e publica o artigo no blog',
+    phase: 'Publicação',
+    systemPrompt: 'Você é o técnico de publicação. Formate o texto final em HTML limpo ou Markdown, garantindo que as imagens estejam bem posicionadas (use placeholders se necessário) e que o artigo esteja pronto para ser colado no WordPress ou Blogger.',
+    status: 'idle',
+    lastRunAt: null,
+    order: 10
+  },
+  {
+    name: 'Social Media Coordinator',
+    emoji: '📱',
+    role: 'Coordenador Social - Cria posts para Twitter/TikTok/Kwai',
+    phase: 'Distribuição',
+    systemPrompt: 'Você é o mestre da viralização. Com o artigo pronto, crie: 1) Um tweet com gancho polêmico, 2) Uma legenda para Instagram com hashtags estratégicas e 3) Um roteiro curto de 15 segundos para um vídeo de "notícia urgente" no TikTok/Reels.',
+    status: 'idle',
+    lastRunAt: null,
+    order: 11
+  },
 ];
 
 export default function AgencyDashboard() {
@@ -167,12 +275,12 @@ export default function AgencyDashboard() {
   const handleCreateJob = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newJobTitle.trim()) return;
-    
+
     if (agents.length === 0) {
       setFeedbackMsg({ type: 'error', text: 'Nenhum agente configurado. Sincronize os agentes primeiro.' });
       return;
     }
-    
+
     try {
       const firstAgent = agents.find(a => a.order === 0) || agents[0];
       const newJob: Omit<PipelineJob, 'id'> = {
@@ -187,10 +295,10 @@ export default function AgencyDashboard() {
         },
         outputs: {}
       };
-      
+
       const docRef = doc(collection(db, 'pipeline_jobs'));
       await setDoc(docRef, newJob);
-      
+
       setNewJobTitle('');
       setShowNewJobModal(false);
       setFeedbackMsg({ type: 'success', text: 'Pauta iniciada com sucesso!' });
@@ -209,7 +317,7 @@ export default function AgencyDashboard() {
         throw new Error('API Key não configurada.');
       }
       const ai = new GoogleGenAI({ apiKey });
-      
+
       let context = `Tópico da Pauta: ${job.articleTitle}\n\n`;
       if (job.outputs) {
         for (const [aId, output] of Object.entries(job.outputs)) {
@@ -241,10 +349,10 @@ export default function AgencyDashboard() {
     try {
       const nextAgentIndex = agents.findIndex(a => a.id === agent.id) + 1;
       const nextAgent = agents[nextAgentIndex];
-      
+
       const updatedOutputs = { ...(job.outputs || {}), [agent.id]: agentOutput };
       const updatedPhases = { ...job.phases, [agent.phase]: 'completed' as const };
-      
+
       let newStatus = job.status;
       let newCurrentAgentId = job.currentAgentId;
       let newCurrentPhase = job.currentPhase;
@@ -270,7 +378,7 @@ export default function AgencyDashboard() {
         currentPhase: newCurrentPhase,
         completedAt: newCompletedAt
       });
-      
+
       setAgentOutput('');
       if (newStatus === 'completed') {
         setSelectedJob(null);
@@ -359,7 +467,7 @@ export default function AgencyDashboard() {
           <Loader2 className="animate-spin text-green-600" size={24} />
           Pipeline Ativo
         </h2>
-        
+
         {jobs.filter(j => j.status === 'in_progress').length === 0 ? (
           <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg border border-dashed border-gray-300">
             Nenhum artigo em produção no momento.
@@ -381,7 +489,7 @@ export default function AgencyDashboard() {
                     </button>
                   </div>
                 </div>
-                
+
                 {/* Step Indicator */}
                 <div className="flex items-center justify-between relative">
                   <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-1 bg-gray-200 -z-10"></div>
@@ -411,7 +519,7 @@ export default function AgencyDashboard() {
       {/* Section 2: Grid de Agentes */}
       <section>
         <h2 className="text-2xl font-black text-gray-900 mb-6">Equipe de IA</h2>
-        
+
         {loading ? (
           <div className="flex justify-center py-12"><Loader2 className="animate-spin text-green-600" size={40} /></div>
         ) : (
@@ -428,15 +536,15 @@ export default function AgencyDashboard() {
                       <div key={agent.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow relative overflow-hidden group">
                         <div className="absolute top-4 right-4 flex items-center gap-3 z-10">
                           {renderStatusIndicator(agent.status)}
-                          <button 
-                            onClick={() => handleDeleteAgent(agent.id)} 
+                          <button
+                            onClick={() => handleDeleteAgent(agent.id)}
                             className="text-gray-400 hover:text-red-500 transition-colors"
                             title="Excluir Agente"
                           >
                             <Trash2 size={16} />
                           </button>
                         </div>
-                        
+
                         <div className="flex items-start gap-4 mb-4">
                           <div className="text-5xl bg-gray-50 p-3 rounded-2xl border border-gray-100">{agent.emoji}</div>
                           <div>
@@ -446,9 +554,9 @@ export default function AgencyDashboard() {
                             </span>
                           </div>
                         </div>
-                        
+
                         <p className="text-sm text-gray-600 mb-6 line-clamp-2 h-10">{agent.role}</p>
-                        
+
                         <button
                           onClick={() => setEditingAgent({ ...agent })}
                           className="w-full py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-colors border border-gray-200"
@@ -487,12 +595,11 @@ export default function AgencyDashboard() {
                   <tr key={job.id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50">
                     <td className="py-3 font-medium text-gray-900">{job.articleTitle}</td>
                     <td className="py-3">
-                      <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                        job.status === 'completed' ? 'bg-green-100 text-green-800' :
-                        job.status === 'error' ? 'bg-red-100 text-red-800' :
-                        job.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
+                      <span className={`px-2 py-1 rounded text-xs font-semibold ${job.status === 'completed' ? 'bg-green-100 text-green-800' :
+                          job.status === 'error' ? 'bg-red-100 text-red-800' :
+                            job.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                              'bg-gray-100 text-gray-800'
+                        }`}>
                         {job.status}
                       </span>
                     </td>
@@ -518,7 +625,7 @@ export default function AgencyDashboard() {
                 <X size={24} />
               </button>
             </div>
-            
+
             <form onSubmit={handleSaveAgent} className="p-6 overflow-y-auto flex-1 space-y-5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
@@ -526,7 +633,7 @@ export default function AgencyDashboard() {
                   <input
                     type="text"
                     value={editingAgent.name}
-                    onChange={e => setEditingAgent({...editingAgent, name: e.target.value})}
+                    onChange={e => setEditingAgent({ ...editingAgent, name: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                     required
                   />
@@ -535,7 +642,7 @@ export default function AgencyDashboard() {
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Fase</label>
                   <select
                     value={editingAgent.phase}
-                    onChange={e => setEditingAgent({...editingAgent, phase: e.target.value as Phase})}
+                    onChange={e => setEditingAgent({ ...editingAgent, phase: e.target.value as Phase })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                   >
                     {PHASES.map(p => <option key={p} value={p}>{p}</option>)}
@@ -548,7 +655,7 @@ export default function AgencyDashboard() {
                 <input
                   type="text"
                   value={editingAgent.role}
-                  onChange={e => setEditingAgent({...editingAgent, role: e.target.value})}
+                  onChange={e => setEditingAgent({ ...editingAgent, role: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                   required
                 />
@@ -559,14 +666,14 @@ export default function AgencyDashboard() {
                 <p className="text-xs text-gray-500 mb-2">Este é o prompt principal que define o comportamento deste agente.</p>
                 <textarea
                   value={editingAgent.systemPrompt}
-                  onChange={e => setEditingAgent({...editingAgent, systemPrompt: e.target.value})}
+                  onChange={e => setEditingAgent({ ...editingAgent, systemPrompt: e.target.value })}
                   rows={8}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 font-mono text-sm"
                   required
                 />
               </div>
             </form>
-            
+
             <div className="p-6 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
               <button
                 type="button"
@@ -599,7 +706,7 @@ export default function AgencyDashboard() {
                 <X size={24} />
               </button>
             </div>
-            
+
             <div className="p-6 overflow-y-auto flex-1 flex flex-col md:flex-row gap-6">
               {/* Sidebar with Agents */}
               <div className="w-full md:w-1/3 border-r border-gray-100 pr-6">
@@ -610,10 +717,10 @@ export default function AgencyDashboard() {
                     const isCurrent = selectedJob.currentAgentId === agent.id;
                     const isPending = !isCompleted && !isCurrent;
                     const isSelected = selectedAgentId === agent.id;
-                    
+
                     return (
-                      <button 
-                        key={agent.id} 
+                      <button
+                        key={agent.id}
                         onClick={() => {
                           setSelectedAgentId(agent.id);
                           setAgentOutput(selectedJob.outputs?.[agent.id] || '');
@@ -633,13 +740,13 @@ export default function AgencyDashboard() {
                   })}
                 </div>
               </div>
-              
+
               {/* Main Content Area */}
               <div className="w-full md:w-2/3 flex flex-col">
                 {selectedAgentId ? (() => {
                   const currentAgent = agents.find(a => a.id === selectedAgentId);
                   if (!currentAgent) return <div className="text-red-500">Agente não encontrado.</div>;
-                  
+
                   const isCompleted = selectedJob.outputs && selectedJob.outputs[currentAgent.id];
                   const isCurrent = selectedJob.currentAgentId === currentAgent.id;
 
@@ -651,7 +758,7 @@ export default function AgencyDashboard() {
                         </h4>
                         <p className="text-sm text-gray-600 mt-1">{currentAgent.role}</p>
                       </div>
-                      
+
                       {!agentOutput && isCurrent ? (
                         <div className="flex-1 flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-xl p-8 text-center">
                           <div className="text-6xl mb-4">{currentAgent.emoji}</div>
