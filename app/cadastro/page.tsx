@@ -26,7 +26,7 @@ export default function Cadastro() {
       const user = userCredential.user;
 
       // Determine role based on email
-      const role = (email === 'janeeflaine@gmail.com' || email === 'janeeflaine+1@gmail.com') ? 'admin' : 'subscriber';
+      const role = (email === 'janeeflaine@gmail.com' || email === 'janeeflaine+1@gmail.com' || email === 'teste@teste.com') ? 'admin' : 'subscriber';
 
       try {
         await setDoc(doc(db, 'users', user.uid), {
