@@ -1,0 +1,167 @@
+{
+  "entities": {
+    "Category": {
+      "title": "Category",
+      "description": "A category for articles.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "The name of the category." },
+        "slug": { "type": "string", "description": "URL-friendly slug." },
+        "description": { "type": "string", "description": "Category description." },
+        "createdAt": { "type": "number", "description": "Timestamp of creation." }
+      },
+      "required": ["name", "slug", "createdAt"]
+    },
+    "Article": {
+      "title": "Article",
+      "description": "A news article or blog post.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "The title of the article." },
+        "slug": { "type": "string", "description": "URL-friendly slug." },
+        "content": { "type": "string", "description": "Markdown content." },
+        "category": { "type": "string", "description": "Category of the article." },
+        "tags": { "type": "array", "items": { "type": "string" }, "description": "Tags for the article." },
+        "imageUrl": { "type": "string", "description": "Cover image URL." },
+        "published": { "type": "boolean", "description": "Whether the article is published." },
+        "createdAt": { "type": "number", "description": "Timestamp of creation." },
+        "authorId": { "type": "string", "description": "ID of the author." }
+      },
+      "required": ["title", "slug", "content", "category", "createdAt", "authorId"]
+    },
+    "Match": {
+      "title": "Match",
+      "description": "A football match.",
+      "type": "object",
+      "properties": {
+        "teamA": { "type": "string", "description": "Home team name." },
+        "teamB": { "type": "string", "description": "Away team name." },
+        "scoreA": { "type": "number", "description": "Home team score." },
+        "scoreB": { "type": "number", "description": "Away team score." },
+        "date": { "type": "string", "description": "Date of the match (YYYY-MM-DD)." },
+        "time": { "type": "string", "description": "Time of the match (HH:MM)." },
+        "status": { "type": "string", "enum": ["upcoming", "live", "finished"], "description": "Match status." },
+        "whereToWatch": { "type": "string", "description": "Link or channel to watch." },
+        "createdAt": { "type": "number", "description": "Timestamp of creation." }
+      },
+      "required": ["teamA", "teamB", "date", "time", "status", "createdAt"]
+    },
+    "Ad": {
+      "title": "Ad",
+      "description": "An advertisement code block.",
+      "type": "object",
+      "properties": {
+        "position": { "type": "string", "enum": ["Home Topo", "Home Entre Blocos", "Artigo Início", "Artigo Meio", "Artigo Fim", "Sidebar"], "description": "Position of the ad." },
+        "code": { "type": "string", "description": "HTML/JS code for the ad." },
+        "active": { "type": "boolean", "description": "Whether the ad is active." },
+        "createdAt": { "type": "number", "description": "Timestamp of creation." }
+      },
+      "required": ["position", "code", "active", "createdAt"]
+    },
+    "Video": {
+      "title": "Video",
+      "description": "A featured video or live stream.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Title of the video." },
+        "youtubeUrl": { "type": "string", "description": "YouTube URL or ID." },
+        "active": { "type": "boolean", "description": "Whether this is the currently active video." },
+        "createdAt": { "type": "number", "description": "Timestamp of creation." }
+      },
+      "required": ["title", "youtubeUrl", "active", "createdAt"]
+    },
+    "Team": {
+      "title": "Team",
+      "description": "A football team with a strength score for the simulator.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "The name of the team." },
+        "strength": { "type": "number", "description": "The strength score of the team (0-100)." },
+        "createdAt": { "type": "number", "description": "Timestamp of creation." }
+      },
+      "required": ["name", "strength", "createdAt"]
+    },
+    "User": {
+      "title": "User",
+      "description": "A registered user of the application.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "The name of the user." },
+        "email": { "type": "string", "description": "The email of the user." },
+        "role": { "type": "string", "enum": ["admin", "subscriber"], "description": "The role of the user." },
+        "createdAt": { "type": "number", "description": "Timestamp of creation." }
+      },
+      "required": ["name", "email", "role", "createdAt"]
+    },
+    "Agent": {
+      "title": "Agent",
+      "description": "An AI agent in the content pipeline.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "The name of the agent." },
+        "emoji": { "type": "string", "description": "Emoji representing the agent." },
+        "role": { "type": "string", "description": "The role/description of the agent." },
+        "phase": { "type": "string", "enum": ["Orquestração", "Pesquisa", "Redação", "Visual", "Revisão", "Publicação", "Distribuição"], "description": "The phase the agent belongs to." },
+        "systemPrompt": { "type": "string", "description": "The system prompt for the AI." },
+        "status": { "type": "string", "enum": ["idle", "working", "waiting", "error"], "description": "Current status of the agent." },
+        "lastRunAt": { "type": "number", "description": "Timestamp of the last run." },
+        "order": { "type": "number", "description": "Sequential order of the agent." }
+      },
+      "required": ["name", "emoji", "role", "phase", "systemPrompt", "status", "order"]
+    },
+    "PipelineJob": {
+      "title": "PipelineJob",
+      "description": "A job running through the AI pipeline.",
+      "type": "object",
+      "properties": {
+        "articleTitle": { "type": "string", "description": "The title of the article being generated." },
+        "status": { "type": "string", "enum": ["pending", "in_progress", "completed", "error"], "description": "Overall status of the job." },
+        "currentAgentId": { "type": "string", "description": "ID of the agent currently working on the job." },
+        "currentPhase": { "type": "string", "description": "Current phase of the job." },
+        "createdAt": { "type": "number", "description": "Timestamp of creation." },
+        "completedAt": { "type": "number", "description": "Timestamp of completion." },
+        "phases": { "type": "object", "description": "Status of each phase." },
+        "outputs": { "type": "object", "description": "Outputs from each agent." }
+      },
+      "required": ["articleTitle", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "Stores all users."
+    },
+    "categories/{categoryId}": {
+      "schema": { "$ref": "#/entities/Category" },
+      "description": "Stores all categories."
+    },
+    "articles/{articleId}": {
+      "schema": { "$ref": "#/entities/Article" },
+      "description": "Stores all articles."
+    },
+    "matches/{matchId}": {
+      "schema": { "$ref": "#/entities/Match" },
+      "description": "Stores all matches."
+    },
+    "ads/{adId}": {
+      "schema": { "$ref": "#/entities/Ad" },
+      "description": "Stores all ads."
+    },
+    "videos/{videoId}": {
+      "schema": { "$ref": "#/entities/Video" },
+      "description": "Stores all videos."
+    },
+    "teams/{teamId}": {
+      "schema": { "$ref": "#/entities/Team" },
+      "description": "Stores all teams for the simulator."
+    },
+    "agents/{agentId}": {
+      "schema": { "$ref": "#/entities/Agent" },
+      "description": "Stores all AI agents."
+    },
+    "pipeline_jobs/{jobId}": {
+      "schema": { "$ref": "#/entities/PipelineJob" },
+      "description": "Stores all AI pipeline jobs."
+    }
+  }
+}

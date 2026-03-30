@@ -1,0 +1,244 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: articles
+    // Document ID: auto-generated
+    // Fields:
+    //   - title: string (required)
+    //   - slug: string (required)
+    //   - content: string (required)
+    //   - category: string (required)
+    //   - tags: list (optional)
+    //   - imageUrl: string (optional)
+    //   - published: boolean (optional)
+    //   - createdAt: number (required)
+    //   - authorId: string (required, immutable)
+    //
+    // Collection: matches
+    // Document ID: auto-generated
+    // Fields:
+    //   - teamA: string (required)
+    //   - teamB: string (required)
+    //   - scoreA: number (optional)
+    //   - scoreB: number (optional)
+    //   - date: string (required)
+    //   - time: string (required)
+    //   - status: string (required)
+    //   - whereToWatch: string (optional)
+    //   - createdAt: number (required)
+    //
+    // Collection: ads
+    // Document ID: auto-generated
+    // Fields:
+    //   - position: string (required)
+    //   - code: string (required)
+    //   - active: boolean (required)
+    //   - createdAt: number (required)
+    //
+    // Collection: videos
+    // Document ID: auto-generated
+    // Fields:
+    //   - title: string (required)
+    //   - youtubeUrl: string (required)
+    //   - active: boolean (required)
+    //   - createdAt: number (required)
+    //
+    // Collection: users
+    // Document ID: user uid
+    // Fields:
+    //   - name: string (required)
+    //   - email: string (required)
+    //   - role: string (required, 'admin' or 'subscriber')
+    //   - createdAt: number (required)
+    //
+    // ===============================================================
+    
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && (
+        (request.auth.token.email == "janeeflaine@gmail.com") ||
+        (request.auth.token.email == "janeeflaine+1@gmail.com") ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+      );
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    // Domain Validators
+    function isValidUser() {
+      let data = request.resource.data;
+      return hasOnlyAllowedFields(['name', 'email', 'role', 'createdAt']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.email is string && data.email.size() > 0 && data.email.size() < 100 &&
+             data.role in ['admin', 'subscriber'] &&
+             data.createdAt is number;
+    }
+
+    function isValidArticle() {
+      let data = request.resource.data;
+      return hasOnlyAllowedFields(['title', 'slug', 'content', 'category', 'tags', 'imageUrl', 'published', 'createdAt', 'authorId']) &&
+             data.title is string && data.title.size() > 0 && data.title.size() < 200 &&
+             data.slug is string && data.slug.size() > 0 && data.slug.size() < 200 &&
+             data.content is string && data.content.size() < 100000 &&
+             data.category is string && data.category.size() < 100 &&
+             (!('tags' in data) || (data.tags is list && data.tags.size() < 20)) &&
+             (!('imageUrl' in data) || (data.imageUrl is string && data.imageUrl.size() < 1000)) &&
+             (!('published' in data) || data.published is bool) &&
+             data.createdAt is number &&
+             data.authorId is string && data.authorId == request.auth.uid;
+    }
+
+    function isValidMatch() {
+      let data = request.resource.data;
+      return hasOnlyAllowedFields(['teamA', 'teamB', 'scoreA', 'scoreB', 'date', 'time', 'status', 'whereToWatch', 'createdAt']) &&
+             data.teamA is string && data.teamA.size() > 0 && data.teamA.size() < 100 &&
+             data.teamB is string && data.teamB.size() > 0 && data.teamB.size() < 100 &&
+             (!('scoreA' in data) || data.scoreA is number) &&
+             (!('scoreB' in data) || data.scoreB is number) &&
+             data.date is string && data.date.size() <= 10 &&
+             data.time is string && data.time.size() <= 5 &&
+             data.status in ['upcoming', 'live', 'finished'] &&
+             (!('whereToWatch' in data) || (data.whereToWatch is string && data.whereToWatch.size() < 500)) &&
+             data.createdAt is number;
+    }
+
+    function isValidAd() {
+      let data = request.resource.data;
+      return hasOnlyAllowedFields(['position', 'code', 'active', 'createdAt']) &&
+             data.position in ['Home Topo', 'Home Entre Blocos', 'Artigo Início', 'Artigo Meio', 'Artigo Fim', 'Sidebar'] &&
+             data.code is string && data.code.size() < 50000 &&
+             data.active is bool &&
+             data.createdAt is number;
+    }
+
+    function isValidVideo() {
+      let data = request.resource.data;
+      return hasOnlyAllowedFields(['title', 'youtubeUrl', 'active', 'createdAt']) &&
+             data.title is string && data.title.size() > 0 && data.title.size() < 200 &&
+             data.youtubeUrl is string && data.youtubeUrl.size() > 0 && data.youtubeUrl.size() < 500 &&
+             data.active is bool &&
+             data.createdAt is number;
+    }
+
+    function isValidTeam() {
+      let data = request.resource.data;
+      return hasOnlyAllowedFields(['name', 'strength', 'createdAt']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.strength is number && data.strength >= 0 && data.strength <= 100 &&
+             data.createdAt is number;
+    }
+
+    function isValidCategory() {
+      let data = request.resource.data;
+      return hasOnlyAllowedFields(['name', 'slug', 'description', 'createdAt']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.slug is string && data.slug.size() > 0 && data.slug.size() < 100 &&
+             (!('description' in data) || (data.description is string && data.description.size() < 500)) &&
+             data.createdAt is number;
+    }
+
+    function isValidAgent() {
+      let data = request.resource.data;
+      return hasOnlyAllowedFields(['name', 'emoji', 'role', 'phase', 'systemPrompt', 'status', 'lastRunAt', 'order', 'createdAt', 'updatedAt', 'id']) &&
+             (!('name' in data) || (data.name is string && data.name.size() > 0 && data.name.size() < 200)) &&
+             (!('emoji' in data) || (data.emoji is string && data.emoji.size() > 0 && data.emoji.size() < 20)) &&
+             (!('role' in data) || (data.role is string && data.role.size() > 0 && data.role.size() < 1000)) &&
+             (!('phase' in data) || data.phase in ['Orquestração', 'Pesquisa', 'Redação', 'Visual', 'Revisão', 'Publicação', 'Distribuição']) &&
+             (!('systemPrompt' in data) || (data.systemPrompt is string && data.systemPrompt.size() < 100000)) &&
+             (!('status' in data) || data.status in ['idle', 'working', 'waiting', 'error']) &&
+             (!('lastRunAt' in data) || data.lastRunAt == null || data.lastRunAt is number) &&
+             (!('order' in data) || data.order is number);
+    }
+
+    function isValidPipelineJob() {
+      let data = request.resource.data;
+      return hasOnlyAllowedFields(['articleTitle', 'status', 'currentAgentId', 'currentPhase', 'createdAt', 'completedAt', 'phases', 'outputs']) &&
+             data.articleTitle is string && data.articleTitle.size() > 0 && data.articleTitle.size() < 200 &&
+             data.status in ['pending', 'in_progress', 'completed', 'error'] &&
+             (!('currentAgentId' in data) || data.currentAgentId == null || data.currentAgentId is string) &&
+             (!('currentPhase' in data) || data.currentPhase == null || data.currentPhase is string) &&
+             data.createdAt is number &&
+             (!('completedAt' in data) || data.completedAt == null || data.completedAt is number) &&
+             (!('phases' in data) || data.phases is map) &&
+             (!('outputs' in data) || data.outputs is map);
+    }
+
+    match /users/{userId} {
+      allow read: if true;
+      allow create: if isAuthenticated() && isOwner(userId) && isValidUser() && (request.resource.data.role == 'subscriber' || isAdmin());
+      allow update: if isAdmin() && isValidUser();
+      allow delete: if isAdmin();
+    }
+
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidCategory();
+      allow update: if isAdmin() && isValidCategory();
+      allow delete: if isAdmin();
+    }
+
+    match /articles/{articleId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidArticle();
+      allow update: if isAdmin() && isValidArticle() && request.resource.data.authorId == resource.data.authorId;
+      allow delete: if isAdmin();
+    }
+
+    match /matches/{matchId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidMatch();
+      allow update: if isAdmin() && isValidMatch();
+      allow delete: if isAdmin();
+    }
+
+    match /ads/{adId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidAd();
+      allow update: if isAdmin() && isValidAd();
+      allow delete: if isAdmin();
+    }
+
+    match /videos/{videoId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidVideo();
+      allow update: if isAdmin() && isValidVideo();
+      allow delete: if isAdmin();
+    }
+
+    match /teams/{teamId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidTeam();
+      allow update: if isAdmin() && isValidTeam();
+      allow delete: if isAdmin();
+    }
+
+    match /agents/{agentId} {
+      allow read: if true;
+      allow create: if isAdmin();
+      allow update: if isAuthenticated();
+      allow delete: if isAdmin();
+    }
+
+    match /pipeline_jobs/{jobId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidPipelineJob();
+      allow update: if isAuthenticated() && isValidPipelineJob();
+      allow delete: if isAdmin();
+    }
+  }
+}
