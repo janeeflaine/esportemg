@@ -312,11 +312,7 @@ export default function AgencyDashboard() {
     setIsAgentRunning(true);
     setAgentOutput('');
     try {
-      const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-      if (!apiKey) {
-        throw new Error('API Key não configurada.');
-      }
-      const ai = new GoogleGenAI({ apiKey });
+      const provider = process.env.NEXT_PUBLIC_AI_PROVIDER || 'gemini';
 
       let context = `Tópico da Pauta: ${job.articleTitle}\n\n`;
       if (job.outputs) {
@@ -328,17 +324,75 @@ export default function AgencyDashboard() {
         }
       }
 
-      const prompt = `Você é o agente: ${agent.name} (${agent.role}).\nSua fase é: ${agent.phase}.\n\nContexto até o momento:\n${context}\n\nInstruções do Sistema:\n${agent.systemPrompt}\n\nCom base no contexto acima, por favor, execute sua tarefa e forneça o resultado.`;
+      const prompt = `Você é o agente: ${agent.name} (${agent.role}).\nSua fase é: ${agent.phase}.\n\nContexto até o momento:\n${context}\n\nInstruções do Sistema:\n${agent.systemPrompt}\n\nCom base no contexto acima, por favor, execute sua tarefa e forneça o resultado no seu idioma preferencial (Português do Brasil).`;
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-3.1-pro-preview',
-        contents: prompt,
-      });
+      let outputText = '';
 
-      setAgentOutput(response.text || '');
-    } catch (error) {
+      if (provider === 'gemini') {
+        const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+        if (!apiKey) throw new Error('Gemini API Key não configurada no .env.local');
+
+        const ai = new GoogleGenAI({ apiKey });
+        const response = await ai.models.generateContent({
+          model: 'gemini-3.1-pro-preview',
+          contents: prompt,
+        });
+        outputText = response.text || '';
+
+      } else if (provider === 'ollama') {
+        const ollamaUrl = process.env.NEXT_PUBLIC_OLLAMA_URL || 'http://localhost:11434/api/generate';
+        const ollamaModel = process.env.NEXT_PUBLIC_OLLAMA_MODEL || 'llama3';
+
+        const response = await fetch(ollamaUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: ollamaModel,
+            prompt: `Instruções do Sistema:\n${agent.systemPrompt}\n\nUser:\n${prompt}`,
+            stream: false
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`Erro do Ollama: ${response.statusText} - Verifique se o Ollama está rodando e o modelo '${ollamaModel}' está baixado.`);
+        }
+
+        const data = await response.json();
+        outputText = data.response || '';
+
+      } else if (provider === 'openai') {
+        const apiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
+        if (!apiKey) throw new Error('OpenAI API Key não configurada no .env.local');
+
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o',
+            messages: [
+              { role: 'system', content: agent.systemPrompt },
+              { role: 'user', content: prompt }
+            ]
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`Erro da OpenAI: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        outputText = data.choices?.[0]?.message?.content || '';
+      } else {
+        throw new Error('Provedor de IA desconhecido. Verifique a variável NEXT_PUBLIC_AI_PROVIDER no .env.local');
+      }
+
+      setAgentOutput(outputText);
+    } catch (error: any) {
       console.error('Error running agent:', error);
-      setFeedbackMsg({ type: 'error', text: 'Erro ao executar o agente.' });
+      setFeedbackMsg({ type: 'error', text: error.message || 'Erro ao executar o agente.' });
     } finally {
       setIsAgentRunning(false);
     }
@@ -596,9 +650,9 @@ export default function AgencyDashboard() {
                     <td className="py-3 font-medium text-gray-900">{job.articleTitle}</td>
                     <td className="py-3">
                       <span className={`px-2 py-1 rounded text-xs font-semibold ${job.status === 'completed' ? 'bg-green-100 text-green-800' :
-                          job.status === 'error' ? 'bg-red-100 text-red-800' :
-                            job.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
-                              'bg-gray-100 text-gray-800'
+                        job.status === 'error' ? 'bg-red-100 text-red-800' :
+                          job.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                            'bg-gray-100 text-gray-800'
                         }`}>
                         {job.status}
                       </span>
